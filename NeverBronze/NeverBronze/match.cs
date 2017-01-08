@@ -34,13 +34,23 @@ namespace NeverBronze
 
         public class Frame
         {
+           
             public Participantframes participantFrames { get; set; }
-            public int timestamp { get; set; }
+            public static int timestamp { get; set; }
             public Event[] events { get; set; }
         }
 
         public class Participantframes
         {
+            public void printAll() {
+
+                
+                Console.WriteLine(Frame.timestamp + " EVENTS THAT TOOK PLACE " + '(' + _1, _2, _3, _4, _5, _6,  + ')');
+
+
+            }
+            
+            
             public _1 _1 { get; set; }
             public _2 _2 { get; set; }
             public _3 _3 { get; set; }
@@ -48,6 +58,7 @@ namespace NeverBronze
             public _5 _5 { get; set; }
             public _6 _6 { get; set; }
         }
+        
 
         public class _1
         {
@@ -304,6 +315,7 @@ namespace NeverBronze
             public int killingSprees { get; set; }
             public int totalUnitsHealed { get; set; }
             public int totalTimeCrowdControlDealt { get; set; }
+            public int totalAllyShielded { get; set; }
         }
 
         public class Mastery
