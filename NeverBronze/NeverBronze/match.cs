@@ -49,14 +49,9 @@ namespace NeverBronze
             public _5 _5 { get; set; }
             public _6 _6 { get; set; }
 
-            public void printAll()
+            public void PrintAll()
             {
-                _1.print();
-                //_2.print();
-                //_3.print();
-                //_4.print();
-                //_5.print();
-                //_6.print();
+                _1.Print();
             }
         }
 
@@ -73,7 +68,7 @@ namespace NeverBronze
             public int dominionScore { get; set; }
             public int teamScore { get; set; }
 
-            public void print()
+            public void Print()
             {
                 Console.WriteLine(string.Format("[MM:SS] {0} {1} {2} {3} {4} {5} {6} {7} {8} {9}",
                     participantId, position, currentGold, totalGold, level, xp, minionsKilled, jungleMinionsKilled, dominionScore, teamScore));
@@ -205,6 +200,13 @@ namespace NeverBronze
             public string buildingType { get; set; }
             public string towerType { get; set; }
             public string monsterType { get; set; }
+
+            public void Print()
+            {
+                Console.WriteLine(string.Format("[MM:SS] ({0}, {1}) {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
+                    position.x, position.y, eventType, itemId, participantId, skillSlot, levelUpType, itemBefore, itemAfter,
+                    killerId, victimId, teamId, laneType, buildingType, towerType, monsterType));
+            }
         }
 
         public class Position6
