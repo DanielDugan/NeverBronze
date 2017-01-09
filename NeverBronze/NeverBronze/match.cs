@@ -42,23 +42,23 @@ namespace NeverBronze
 
         public class Participantframes
         {
-            public void printAll() {
-
-                
-                Console.WriteLine(Frame.timestamp + " EVENTS THAT TOOK PLACE " + '(' + _1, _2, _3, _4, _5, _6,  + ')');
-
-
-            }
-            
-            
             public _1 _1 { get; set; }
             public _2 _2 { get; set; }
             public _3 _3 { get; set; }
             public _4 _4 { get; set; }
             public _5 _5 { get; set; }
             public _6 _6 { get; set; }
+
+            public void printAll()
+            {
+                _1.print();
+                //_2.print();
+                //_3.print();
+                //_4.print();
+                //_5.print();
+                //_6.print();
+            }
         }
-        
 
         public class _1
         {
@@ -72,6 +72,12 @@ namespace NeverBronze
             public int jungleMinionsKilled { get; set; }
             public int dominionScore { get; set; }
             public int teamScore { get; set; }
+
+            public void print()
+            {
+                Console.WriteLine(string.Format("[MM:SS] {0} {1} {2} {3} {4} {5} {6} {7} {8} {9}",
+                    participantId, position, currentGold, totalGold, level, xp, minionsKilled, jungleMinionsKilled, dominionScore, teamScore));
+            }
         }
 
         public class Position
@@ -315,7 +321,6 @@ namespace NeverBronze
             public int killingSprees { get; set; }
             public int totalUnitsHealed { get; set; }
             public int totalTimeCrowdControlDealt { get; set; }
-            public int totalAllyShielded { get; set; }
         }
 
         public class Mastery
