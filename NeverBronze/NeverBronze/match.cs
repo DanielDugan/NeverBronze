@@ -1,67 +1,186 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
 namespace NeverBronze
 {
+    public static class Util
+    {
+        public static void getMinutesSeconds(int timestamp, out int minutes, out int seconds)
+        {
+            seconds = (int)(timestamp / (1000)) % 60;
+            minutes = (int)timestamp / (60 * 1000);
+        }
+    }
+
     public class Match
     {
-        private readonly long matchId;
-        private readonly string region;
-        private readonly string platformId;
-        private readonly string matchMode;
-        private readonly string matchType;
-        private readonly long matchCreation;
-        private readonly int matchDuration;
-        private readonly string queueType;
-        private readonly int mapId;
-        private readonly string season;
-        private readonly string matchVersion;
-        private readonly Participant[] participants;
-        private readonly ParticipantIdentity[] participantIdentities;
-        private readonly Team[] teams;
-        private readonly Timeline timeline;
+        public long matchId { get; set; }
+        public string region { get; set; }
+        public string platformId { get; set; }
+        public string matchMode { get; set; }
+        public string matchType { get; set; }
+        public long matchCreation { get; set; }
+        public int matchDuration { get; set; }
+        public string queueType { get; set; }
+        public int mapId { get; set; }
+        public string season { get; set; }
+        public string matchVersion { get; set; }
+        public Participant[] participants { get; set; }
+        public Participantidentity[] participantIdentities { get; set; }
+        public Team[] teams { get; set; }
+        public Timeline timeline { get; set; }
     }
 
     public class Timeline
     {
-        private readonly Frame[] frames;
-        private readonly int frameInterval;
-    }
+        public Frame[] frames { get; set; }
+        public int frameInterval { get; set; }
 
-    public class Frame
-    {
-        private readonly ParticipantFrame[] participantFrames;
-        private readonly int timestamp;
-        private readonly Event[] events;
-
-        public void printAll()
+        public void printAllFrameEvents()
         {
-            foreach (var participantFrame in participantFrames)
+            Console.WriteLine("\nTime  | Participant  | ItemID | Event Type"); Console.WriteLine(new String('-', 60));
+            foreach (var frame in frames)
             {
-                participantFrame.print();
+                frame.printAllFrameEvents();
+            }
+        }
+
+        public void printAllFramesParticipants()
+        {
+            Console.WriteLine("\nTime  | Participant  | X     | Y     | Lvl   | XP    | Gold");
+            Console.WriteLine(new String('-', 60));
+            foreach (var frame in frames)
+            {
+                frame.printAllFrameParticipants();
             }
         }
     }
-    
-    public class ParticipantFrame
-    {
-        private readonly int participantId;
-        private readonly Position position;
-        private readonly int currentGold;
-        private readonly int totalGold;
-        private readonly int level;
-        private readonly int xp;
-        private readonly int minionsKilled;
-        private readonly int jungleMinionsKilled;
-        private readonly int dominionScore;
-        private readonly int teamScore;
 
-        public void print()
+    class FrameConverter : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
         {
-            Console.WriteLine(string.Format("[MM:SS] {0} {1} {2} {3} {4} {5} {6} {7} {8} {9}",
-                participantId, position, currentGold, totalGold, level, xp, minionsKilled, jungleMinionsKilled, dominionScore, teamScore));
+            return (objectType == typeof(Frame));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            JObject jo = JObject.Load(reader);
+            Frame frame = new Frame();
+
+            /*
+             * Events
+             * 
+             */
+            frame.frameEvents = new List<FrameEvent>();
+
+            if (jo["events"] != null)
+            {
+                foreach (JObject frameEvent in jo["events"])
+                {
+                    frame.frameEvents.Add(frameEvent.ToObject<FrameEvent>(serializer));
+                }
+            }
+
+            /*
+             * Frame Participants
+             * 
+             */
+            frame.frameParticipants = new List<FrameParticipant>();
+
+            if (jo["participantFrames"] != null)
+            {
+                foreach (JProperty participantFrame in jo["participantFrames"])
+                {
+                    var frameParticipant = participantFrame.Value.ToObject<FrameParticipant>(serializer);
+                    frameParticipant.timestamp = (int)jo["timestamp"];
+                    frame.frameParticipants.Add(frameParticipant);
+                }
+            }
+
+            return frame;
+        }
+
+        public override bool CanWrite
+        {
+            get { return false; }
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    [JsonConverter(typeof(FrameConverter))]
+    public class Frame
+    {
+        public List<FrameEvent> frameEvents { get; set; }
+        public List<FrameParticipant> frameParticipants { get; set; }
+
+        public void printAllFrameEvents()
+        {
+            foreach (var frameEvent in frameEvents)
+            {
+                frameEvent.printFrameEvent();
+            }
+        }
+
+        public void printAllFrameParticipants()
+        {
+            foreach (var frameParticipant in frameParticipants)
+            {
+                frameParticipant.printFrameParticipant();
+            }
+            Console.WriteLine(new String('-', 60));
+        }
+    }
+
+    public class FrameEvent
+    {
+        public string eventType { get; set; }
+        public int timestamp { get; set; }
+        public int itemId { get; set; }
+        public int participantId { get; set; }
+
+        public void printFrameEvent()
+        {
+            int minutes, seconds;
+            Util.getMinutesSeconds(timestamp, out minutes, out seconds);
+            Console.WriteLine(string.Format("{0:00}:{1:00} | Participant{2} | {3,6} | {4}", minutes, seconds, participantId, itemId, eventType));
+        }
+    }
+
+    public class FrameParticipant
+    {
+        public int timestamp { get; set; }
+        public int participantId { get; set; }
+        public Position position { get; set; }
+        public int currentGold { get; set; }
+        public int totalGold { get; set; }
+        public int level { get; set; }
+        public int xp { get; set; }
+        public int minionsKilled { get; set; }
+        public int jungleMinionsKilled { get; set; }
+        public int dominionScore { get; set; }
+        public int teamScore { get; set; }
+
+        public void printFrameParticipant()
+        {
+            string timestampStr = "";
+            int minutes, seconds;
+            Util.getMinutesSeconds(timestamp, out minutes, out seconds);
+
+            if (participantId == 1)
+            {
+                timestampStr = string.Format("{0:00}:{1:00}", minutes, seconds);
+            }
+
+            Console.WriteLine(string.Format("{0,5} | Participant{1} | {2,5} | {3,5} | {4,5} | {5,5} | {6,5}", timestampStr, participantId, position?.x, position?.y, level, xp, totalGold));
         }
     }
 
@@ -70,194 +189,134 @@ namespace NeverBronze
         public int x { get; set; }
         public int y { get; set; }
     }
-    
-    public class Event
-    {
-        private readonly string eventType;
-        private readonly int timestamp;
-        private readonly int itemId;
-        private readonly int participantId;
-        private readonly int skillSlot;
-        private readonly string levelUpType;
-        private readonly int itemBefore;
-        private readonly int itemAfter;
-        private readonly int killerId;
-        private readonly int victimId;
-        private readonly Position position;
-        private readonly int[] assistingParticipantIds;
-        private readonly int teamId;
-        private readonly string laneType;
-        private readonly string buildingType;
-        private readonly string towerType;
-        private readonly string monsterType;
-
-        public void print()
-        {
-            Console.WriteLine(string.Format("[MM:SS] ({0}, {1}) {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15}",
-                position.x, position.y, eventType, itemId, participantId, skillSlot, levelUpType, itemBefore, itemAfter,
-                killerId, victimId, teamId, laneType, buildingType, towerType, monsterType));
-        }
-    }
 
     public class Participant
     {
-        private readonly int teamId;
-        private readonly int spell1Id;
-        private readonly int spell2Id;
-        private readonly int championId;
-        private readonly string highestAchievedSeasonTier;
-        private readonly TimelineDeltas timeline;
-        private readonly Mastery[] masteries;
-        private readonly Stats stats;
-        private readonly int participantId;
-        private readonly Rune[] runes;
+        public int teamId { get; set; }
+        public int spell1Id { get; set; }
+        public int spell2Id { get; set; }
+        public int championId { get; set; }
+        public string highestAchievedSeasonTier { get; set; }
+        public DeltaTimeline timeline { get; set; }
+        public Mastery[] masteries { get; set; }
+        public Stats stats { get; set; }
+        public int participantId { get; set; }
+        public Rune[] runes { get; set; }
     }
 
-    public class TimelineDeltas
+    public class DeltaTimeline
     {
-        private readonly CreepsPerMinDeltas creepsPerMinDeltas;
-        private readonly XpPerMinDeltas xpPerMinDeltas;
-        private readonly GoldPerMinDeltas goldPerMinDeltas;
-        private readonly DamageTakenPerMinDeltas damageTakenPerMinDeltas;
-        private readonly string role;
-        private readonly string lane;
+        public Delta creepsPerMinDeltas { get; set; }
+        public Delta xpPerMinDeltas { get; set; }
+        public Delta goldPerMinDeltas { get; set; }
+        public Delta damageTakenPerMinDeltas { get; set; }
+        public string role { get; set; }
+        public string lane { get; set; }
     }
 
-    public class CreepsPerMinDeltas
+    public class Delta
     {
-        private readonly float zeroToTen;
-        private readonly float tenToTwenty;
-    }
-
-    public class XpPerMinDeltas
-    {
-        private readonly float zeroToTen;
-        private readonly float tenToTwenty;
-    }
-
-    public class GoldPerMinDeltas
-    {
-        private readonly float zeroToTen;
-        private readonly float tenToTwenty;
-    }
-
-    public class DamageTakenPerMinDeltas
-    {
-        private readonly float zeroToTen;
-        private readonly float tenToTwenty;
+        public float zeroToTen { get; set; }
+        public float tenToTwenty { get; set; }
+        public float twentyToThirty { get; set; }
+        public float thirtyToEnd { get; set; }
     }
 
     public class Stats
     {
-        private readonly bool winner;
-        private readonly int champLevel;
-        private readonly int item0;
-        private readonly int item1;
-        private readonly int item2;
-        private readonly int item3;
-        private readonly int item4;
-        private readonly int item5;
-        private readonly int item6;
-        private readonly int kills;
-        private readonly int doubleKills;
-        private readonly int tripleKills;
-        private readonly int quadraKills;
-        private readonly int pentaKills;
-        private readonly int unrealKills;
-        private readonly int largestKillingSpree;
-        private readonly int deaths;
-        private readonly int assists;
-        private readonly int totalDamageDealt;
-        private readonly int totalDamageDealtToChampions;
-        private readonly int totalDamageTaken;
-        private readonly int largestCriticalStrike;
-        private readonly int totalHeal;
-        private readonly int minionsKilled;
-        private readonly int neutralMinionsKilled;
-        private readonly int neutralMinionsKilledTeamJungle;
-        private readonly int neutralMinionsKilledEnemyJungle;
-        private readonly int goldEarned;
-        private readonly int goldSpent;
-        private readonly int combatPlayerScore;
-        private readonly int objectivePlayerScore;
-        private readonly int totalPlayerScore;
-        private readonly int totalScoreRank;
-        private readonly int magicDamageDealtToChampions;
-        private readonly int physicalDamageDealtToChampions;
-        private readonly int trueDamageDealtToChampions;
-        private readonly int visionWardsBoughtInGame;
-        private readonly int sightWardsBoughtInGame;
-        private readonly int magicDamageDealt;
-        private readonly int physicalDamageDealt;
-        private readonly int trueDamageDealt;
-        private readonly int magicDamageTaken;
-        private readonly int physicalDamageTaken;
-        private readonly int trueDamageTaken;
-        private readonly bool firstBloodKill;
-        private readonly bool firstBloodAssist;
-        private readonly bool firstTowerKill;
-        private readonly bool firstTowerAssist;
-        private readonly bool firstInhibitorKill;
-        private readonly bool firstInhibitorAssist;
-        private readonly int inhibitorKills;
-        private readonly int towerKills;
-        private readonly int wardsPlaced;
-        private readonly int wardsKilled;
-        private readonly int largestMultiKill;
-        private readonly int killingSprees;
-        private readonly int totalUnitsHealed;
-        private readonly int totalTimeCrowdControlDealt;
+        public bool winner { get; set; }
+        public int champLevel { get; set; }
+        public int item0 { get; set; }
+        public int item1 { get; set; }
+        public int item2 { get; set; }
+        public int item3 { get; set; }
+        public int item4 { get; set; }
+        public int item5 { get; set; }
+        public int item6 { get; set; }
+        public int kills { get; set; }
+        public int doubleKills { get; set; }
+        public int tripleKills { get; set; }
+        public int quadraKills { get; set; }
+        public int pentaKills { get; set; }
+        public int unrealKills { get; set; }
+        public int largestKillingSpree { get; set; }
+        public int deaths { get; set; }
+        public int assists { get; set; }
+        public int totalDamageDealt { get; set; }
+        public int totalDamageDealtToChampions { get; set; }
+        public int totalDamageTaken { get; set; }
+        public int largestCriticalStrike { get; set; }
+        public int totalHeal { get; set; }
+        public int minionsKilled { get; set; }
+        public int neutralMinionsKilled { get; set; }
+        public int neutralMinionsKilledTeamJungle { get; set; }
+        public int neutralMinionsKilledEnemyJungle { get; set; }
+        public int goldEarned { get; set; }
+        public int goldSpent { get; set; }
+        public int combatPlayerScore { get; set; }
+        public int objectivePlayerScore { get; set; }
+        public int totalPlayerScore { get; set; }
+        public int totalScoreRank { get; set; }
+        public int magicDamageDealtToChampions { get; set; }
+        public int physicalDamageDealtToChampions { get; set; }
+        public int trueDamageDealtToChampions { get; set; }
+        public int visionWardsBoughtInGame { get; set; }
+        public int sightWardsBoughtInGame { get; set; }
+        public int magicDamageDealt { get; set; }
+        public int physicalDamageDealt { get; set; }
+        public int trueDamageDealt { get; set; }
+        public int magicDamageTaken { get; set; }
+        public int physicalDamageTaken { get; set; }
+        public int trueDamageTaken { get; set; }
+        public bool firstBloodKill { get; set; }
+        public bool firstBloodAssist { get; set; }
+        public bool firstTowerKill { get; set; }
+        public bool firstTowerAssist { get; set; }
+        public bool firstInhibitorKill { get; set; }
+        public bool firstInhibitorAssist { get; set; }
+        public int inhibitorKills { get; set; }
+        public int towerKills { get; set; }
+        public int wardsPlaced { get; set; }
+        public int wardsKilled { get; set; }
+        public int largestMultiKill { get; set; }
+        public int killingSprees { get; set; }
+        public int totalUnitsHealed { get; set; }
+        public int totalTimeCrowdControlDealt { get; set; }
     }
 
     public class Mastery
     {
-        private readonly int masteryId;
-        private readonly int rank;
+        public int masteryId { get; set; }
+        public int rank { get; set; }
     }
 
     public class Rune
     {
-        private readonly int runeId;
-        private readonly int rank;
+        public int runeId { get; set; }
+        public int rank { get; set; }
     }
 
-    public class ParticipantIdentity
+    public class Participantidentity
     {
-        private readonly int participantId;
-        private readonly Player player;
-    }
-
-    public class Player
-    {
-        private readonly int summonerId;
-        private readonly string summonerName;
-        private readonly string matchHistoryUri;
-        private readonly int profileIcon;
+        public int participantId { get; set; }
     }
 
     public class Team
     {
-        private readonly int teamId;
-        private readonly bool winner;
-        private readonly bool firstBlood;
-        private readonly bool firstTower;
-        private readonly bool firstInhibitor;
-        private readonly bool firstBaron;
-        private readonly bool firstDragon;
-        private readonly bool firstRiftHerald;
-        private readonly int towerKills;
-        private readonly int inhibitorKills;
-        private readonly int baronKills;
-        private readonly int dragonKills;
-        private readonly int riftHeraldKills;
-        private readonly int vilemawKills;
-        private readonly int dominionVictoryScore;
-        private readonly Ban[] bans;
-    }
-
-    public class Ban
-    {
-        private readonly int championId;
-        private readonly int pickTurn;
+        public int teamId { get; set; }
+        public bool winner { get; set; }
+        public bool firstBlood { get; set; }
+        public bool firstTower { get; set; }
+        public bool firstInhibitor { get; set; }
+        public bool firstBaron { get; set; }
+        public bool firstDragon { get; set; }
+        public bool firstRiftHerald { get; set; }
+        public int towerKills { get; set; }
+        public int inhibitorKills { get; set; }
+        public int baronKills { get; set; }
+        public int dragonKills { get; set; }
+        public int riftHeraldKills { get; set; }
+        public int vilemawKills { get; set; }
+        public int dominionVictoryScore { get; set; }
     }
 }
