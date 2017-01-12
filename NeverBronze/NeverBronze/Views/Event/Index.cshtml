@@ -1,0 +1,29 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Events</h2>
+
+<table class="table table-condensed table-striped">
+    <thead>
+        <th class="text-center">Time</th>
+        <th class="text-center">Participant</th>
+        <th class="text-center">ItemID</th>
+        <th class="text-center">Type</th>
+    </thead>
+    <tbody>
+        @foreach (var frameEvent in ViewBag.FrameEvents)
+        {
+            foreach (var tr in frameEvent)
+            {
+                <tr>
+                    @foreach (var td in tr)
+                    {
+                        <td class="text-center">@td</td>
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>

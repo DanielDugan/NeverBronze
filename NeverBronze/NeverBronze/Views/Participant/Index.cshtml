@@ -1,0 +1,42 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Events</h2>
+
+<table class="table table-condensed table-striped">
+    <thead>
+        <th class="text-center">Time</th>
+        <th class="text-center">Participant</th>
+        <th class="text-center">X</th>
+        <th class="text-center">Y</th>
+        <th class="text-center">Level</th>
+        <th class="text-center">XP</th>
+        <th class="text-center">Total Gold</th>
+    </thead>
+    <tbody>
+        @foreach (var frameParticipant in ViewBag.FrameParticipants)
+        {
+            foreach (var tr in frameParticipant)
+            {
+                <tr>
+                    @foreach (var td in tr)
+                    {
+                        if (!tr[0].Equals(td))
+                        {
+                            <td class="text-center">@td</td>
+                        }
+                        else
+                        {
+                            if (tr[1] == "1")
+                            {
+                                <td rowspan="6" class="text-center" style="vertical-align: middle">@td</td>
+                            }
+                        }
+                    }
+                </tr>
+            }
+        }
+    </tbody>
+</table>

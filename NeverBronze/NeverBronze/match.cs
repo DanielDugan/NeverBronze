@@ -39,25 +39,6 @@ namespace NeverBronze
     {
         public Frame[] frames { get; set; }
         public int frameInterval { get; set; }
-
-        public void printAllFrameEvents()
-        {
-            Console.WriteLine("\nTime  | Participant  | ItemID | Event Type"); Console.WriteLine(new String('-', 60));
-            foreach (var frame in frames)
-            {
-                frame.printAllFrameEvents();
-            }
-        }
-
-        public void printAllFramesParticipants()
-        {
-            Console.WriteLine("\nTime  | Participant  | X     | Y     | Lvl   | XP    | Gold");
-            Console.WriteLine(new String('-', 60));
-            foreach (var frame in frames)
-            {
-                frame.printAllFrameParticipants();
-            }
-        }
     }
 
     class FrameConverter : JsonConverter
@@ -122,21 +103,24 @@ namespace NeverBronze
         public List<FrameEvent> frameEvents { get; set; }
         public List<FrameParticipant> frameParticipants { get; set; }
 
-        public void printAllFrameEvents()
+        public List<List<string>> getAllFrameEvents()
         {
+            var list = new List<List<string>>();
             foreach (var frameEvent in frameEvents)
             {
-                frameEvent.printFrameEvent();
+                list.Add(frameEvent.getFrameEvent());
             }
+            return list;
         }
 
-        public void printAllFrameParticipants()
+        public List<List<string>> getAllFrameParticipants()
         {
+            var list = new List<List<string>>();
             foreach (var frameParticipant in frameParticipants)
             {
-                frameParticipant.printFrameParticipant();
+                list.Add(frameParticipant.getFrameParticipant());
             }
-            Console.WriteLine(new String('-', 60));
+            return list;
         }
     }
 
@@ -147,11 +131,11 @@ namespace NeverBronze
         public int itemId { get; set; }
         public int participantId { get; set; }
 
-        public void printFrameEvent()
+        public List<string> getFrameEvent()
         {
             int minutes, seconds;
             Util.getMinutesSeconds(timestamp, out minutes, out seconds);
-            Console.WriteLine(string.Format("{0:00}:{1:00} | Participant{2} | {3,6} | {4}", minutes, seconds, participantId, itemId, eventType));
+            return new List<string> { string.Format("{0:00}:{1:00}", minutes, seconds), participantId.ToString(), itemId.ToString(), eventType };
         }
     }
 
@@ -168,19 +152,12 @@ namespace NeverBronze
         public int jungleMinionsKilled { get; set; }
         public int dominionScore { get; set; }
         public int teamScore { get; set; }
-
-        public void printFrameParticipant()
+        
+        public List<string> getFrameParticipant()
         {
-            string timestampStr = "";
             int minutes, seconds;
             Util.getMinutesSeconds(timestamp, out minutes, out seconds);
-
-            if (participantId == 1)
-            {
-                timestampStr = string.Format("{0:00}:{1:00}", minutes, seconds);
-            }
-
-            Console.WriteLine(string.Format("{0,5} | Participant{1} | {2,5} | {3,5} | {4,5} | {5,5} | {6,5}", timestampStr, participantId, position?.x, position?.y, level, xp, totalGold));
+            return new List<string> { string.Format("{0:00}:{1:00}", minutes, seconds), participantId.ToString(), position?.x.ToString(), position?.y.ToString(), level.ToString(), xp.ToString(), totalGold.ToString() };
         }
     }
 
