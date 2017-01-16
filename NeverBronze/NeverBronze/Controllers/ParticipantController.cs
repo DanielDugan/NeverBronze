@@ -14,8 +14,8 @@ namespace NeverBronze.Controllers
     {
         public ActionResult Index()
         {
-            string filename = @"C:\Users\egates\Documents\Visual Studio 2015\Projects\NeverBronzeConsole\NeverBronzeConsole\data1.json";
-
+            string filename = @"C:\Users\Joseph\Desktop\GitHub\NeverBronze\NeverBronze\NeverBronze\App_Data\data.json";
+                
             using (var reader = new StreamReader(filename))
             using (var jsonReader = new JsonTextReader(reader))
             {
